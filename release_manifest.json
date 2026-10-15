@@ -1,0 +1,37 @@
+{
+  "tag": "velloc-v1.149.2.1",
+  "created_utc": "2026-10-14T17:13:16Z",
+  "versions": {
+    "custom_browser_major": 1,
+    "chrome_major": 149,
+    "interface_version": 2,
+    "custom_browser_patch": 1
+  },
+  "repos": [
+    {
+      "name": "root",
+      "path": ".",
+      "tag": "velloc-v1.149.2.1",
+      "head": "b99e2f9ccea0b0811c4083038249503a449985d9"
+    },
+    {
+      "name": "src",
+      "path": "src",
+      "tag": "velloc-v1.149.2.1",
+      "head": "6a0242978ecd8fd9b264e0b42fe079d01b3f4ace"
+    },
+    {
+      "name": "custom_browser",
+      "path": "src\\custom_browser",
+      "tag": "velloc-v1.149.2.1",
+      "head": "5c7eb8c5243066b1f2837b2e2ee71b8afa6ed073"
+    },
+    {
+      "name": "nexus_web",
+      "path": "nexus_web",
+      "tag": "velloc-v1.149.2.1",
+      "head": "7f9a21def466b54aa0bb6f2a8c9731301ea5012a"
+    }
+  ],
+  "e2e_verified": true
+}

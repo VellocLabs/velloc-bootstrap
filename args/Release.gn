@@ -1,0 +1,11 @@
+# Pin to Siso (see args/Debug.gn for why): prevents autoninja from refusing
+# to build when a stray .ninja_deps appears next to the Siso state.
+use_siso = true
+is_debug = false
+enable_custom_browser = true
+
+# Chromium 149 added an assertion that the unsafe-buffers clang plugin is
+# incompatible with precompiled headers (build/config/clang/BUILD.gn:121).
+# Non-component release builds default to PCH on Windows, so disable the
+# plugin to avoid the assert. Static-analysis-only; codegen is unaffected.
+clang_use_unsafe_buffers_plugin = false

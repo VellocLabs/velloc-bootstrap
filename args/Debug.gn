@@ -1,0 +1,19 @@
+# Set build arguments here. See `gn help buildargs`.
+# Pin the build tool to Siso: this checkout's out dirs are built with Siso
+# (.siso_deps). If use_siso is left unset, depot_tools' autoninja auto-detects
+# and — whenever a stray .ninja_deps exists — downgrades itself to Ninja, then
+# refuses to run against the Siso state ("Run gn clean before switching from
+# siso to ninja"), demanding a full `gn clean` rebuild.
+use_siso = true
+is_debug = true
+# use_remoteexec = true
+cc_wrapper = "sccache"
+is_component_build = true
+target_cpu = "x64"
+v8_symbol_level = 0
+blink_symbol_level = 0
+chrome_pgo_phase = 0
+is_official_build = false
+is_chrome_branded = false
+branding_path_component = "Velloc"
+enable_custom_browser = true
