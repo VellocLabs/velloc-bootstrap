@@ -1,37 +1,46 @@
 {
-  "tag": "velloc-v1.149.2.1",
-  "created_utc": "2026-10-14T17:13:16Z",
+  "tag": "velloc-v1.149.2.2",
+  "created_utc": "2026-10-15T21:39:51Z",
   "versions": {
     "custom_browser_major": 1,
     "chrome_major": 149,
     "interface_version": 2,
-    "custom_browser_patch": 1
+    "custom_browser_patch": 2
   },
   "repos": [
     {
       "name": "root",
       "path": ".",
-      "tag": "velloc-v1.149.2.1",
-      "head": "b99e2f9ccea0b0811c4083038249503a449985d9"
+      "tag": "velloc-v1.149.2.2",
+      "head": "c93f6ec5a5b649e43c960accb562d8a7f8085cf0"
     },
     {
       "name": "src",
       "path": "src",
-      "tag": "velloc-v1.149.2.1",
-      "head": "6a0242978ecd8fd9b264e0b42fe079d01b3f4ace"
+      "tag": "velloc-v1.149.2.2",
+      "head": "1c8983b792927249835f7ae39bf37bbbc1f5aabe"
     },
     {
       "name": "custom_browser",
       "path": "src\\custom_browser",
-      "tag": "velloc-v1.149.2.1",
-      "head": "5c7eb8c5243066b1f2837b2e2ee71b8afa6ed073"
+      "tag": "velloc-v1.149.2.2",
+      "head": "ac765c757cff50b997677910302c12aa72ed383f"
     },
     {
       "name": "nexus_web",
       "path": "nexus_web",
-      "tag": "velloc-v1.149.2.1",
-      "head": "7f9a21def466b54aa0bb6f2a8c9731301ea5012a"
+      "tag": "velloc-v1.149.2.2",
+      "head": "b2b8260d02f3f7a52c4f8af1099fbcacfe05330e"
     }
   ],
-  "e2e_verified": true
+  "e2e_verified": false,
+  "e2e_waived": [
+    "e2e: the recorded run was not the full suite (1/109 spec files); first missing: anthropic-thinking-tier-shape.spec.ts, bridge-routing.spec.ts, cancel-mid-stream.spec.ts",
+    "e2e: src: moved since the run (1dba77cf -> 1c8983b7) - the record is stale",
+    "e2e: custom_browser: recorded run was on 'host-strings-app-locale', but a client release ships 'main' - a green run off the shipping branch does not gate one",
+    "e2e: custom_browser: moved since the run (1f97a38b -> 5d9aeaf6) - the record is stale",
+    "e2e: nexus_web: moved since the run (2a229fad -> b2b8260d) - the record is stale",
+    "e2e: internal: moved since the run (284483bf -> 7df3dfbc) - the record is stale",
+    "e2e: the binary under test (src/out/Debug/chrome.dll) was built 2026-10-15T16:40:11.751000+00:00 but custom_browser/VERSION was modified 2026-10-15T21:38:35.391856+00:00 - the run exercised code older than what would ship. Rebuild, then re-run the suite"
+  ]
 }
