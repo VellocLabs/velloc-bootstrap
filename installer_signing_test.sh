@@ -338,20 +338,23 @@ run_case case_build_wiring && pass "build.sh repacks without ninja" || fail "bui
 python "$HERE/installer_update_resources_test.py" >/dev/null 2>&1 \
   && pass "installer_update_resources.py" || fail "installer_update_resources.py"
 
-# The bundled rg.exe ships through the real chrome.release, so the payload
-# signing must pick it up like chrome.dll (no separate signing step exists).
+# The bundled rg.exe and the console host pair ship through the real
+# chrome.release, so the payload signing must pick them up like chrome.dll
+# (no separate signing step exists).
 REAL_RELEASE="$HERE/src/chrome/installer/mini_installer/chrome.release"
 if [ -f "$REAL_RELEASE" ]; then
   case_real_release_signs_rg() {
     local out="$TMP/real_out"
     mkdir -p "$out"
-    touch "$out/rg.exe" "$out/chrome.dll"
+    touch "$out/rg.exe" "$out/conpty.dll" "$out/OpenConsole.exe" "$out/chrome.dll"
     local got
     got="$(velloc_sign_list_payload "$REAL_RELEASE" "$out")"
-    printf '%s\n' "$got" | grep -qxF "$out/rg.exe"
+    printf '%s\n' "$got" | grep -qxF "$out/rg.exe" \
+      && printf '%s\n' "$got" | grep -qxF "$out/conpty.dll" \
+      && printf '%s\n' "$got" | grep -qxF "$out/OpenConsole.exe"
   }
-  run_case case_real_release_signs_rg && pass "real chrome.release puts rg.exe in the signed payload" \
-    || fail "real chrome.release puts rg.exe in the signed payload"
+  run_case case_real_release_signs_rg && pass "real chrome.release puts rg.exe, conpty.dll and OpenConsole.exe in the signed payload" \
+    || fail "real chrome.release puts rg.exe, conpty.dll and OpenConsole.exe in the signed payload"
 else
   echo "SKIP: real chrome.release ($REAL_RELEASE not present in this checkout)"
 fi
