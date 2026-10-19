@@ -1,40 +1,45 @@
 {
-  "tag": "velloc-v1.149.2.3",
-  "created_utc": "2026-10-19T14:04:39Z",
+  "tag": "velloc-v1.149.2.4",
+  "created_utc": "2026-10-19T22:14:38Z",
   "versions": {
     "custom_browser_major": 1,
     "chrome_major": 149,
     "interface_version": 2,
-    "custom_browser_patch": 3
+    "custom_browser_patch": 4
   },
   "repos": [
     {
       "name": "root",
       "path": ".",
-      "tag": "velloc-v1.149.2.3",
-      "head": "057ff9a4d75e1afe4fea56229ed26495df635982"
+      "tag": "velloc-v1.149.2.4",
+      "head": "f3bdff233e9a08904c338acf13b7ccd8505cfdbb"
     },
     {
       "name": "src",
       "path": "src",
-      "tag": "velloc-v1.149.2.3",
-      "head": "05b348f542b95bf43dc315ede719d52c5c817ef8"
+      "tag": "velloc-v1.149.2.4",
+      "head": "d7ae6c015f6ba703c0cba7323fae421c5fedcb7b"
     },
     {
       "name": "custom_browser",
       "path": "src\\custom_browser",
-      "tag": "velloc-v1.149.2.3",
-      "head": "949e2cc1670a5cebf49b8f40491587d4bb7e12b7"
+      "tag": "velloc-v1.149.2.4",
+      "head": "ab65850bf9e7cf9c045d71dd2750c9beada29fdd"
     },
     {
       "name": "nexus_web",
       "path": "nexus_web",
-      "tag": "velloc-v1.149.2.3",
-      "head": "867af76520fb48ef5e6c7cb9a9d19f73f13ac554"
+      "tag": "velloc-v1.149.2.4",
+      "head": "35ed4fe16500c536e4848b7e6228625b3e497890"
     }
   ],
   "e2e_verified": false,
   "e2e_waived": [
-    "e2e: the recorded run did not pass (outcome='failed', 6 failed)"
+    "e2e: the recorded run was not the full suite (1/115 spec files); first missing: 3 spec files",
+    "e2e: src: moved since the run (156ab3ea -> d7ae6c01) - the record is stale",
+    "e2e: custom_browser: moved since the run (57ee5138 -> cb75690c) - the record is stale",
+    "e2e: nexus_web: moved since the run (294a5342 -> 35ed4fe1) - the record is stale",
+    "e2e: internal: moved since the run (a7ddbf93 -> fbd4a1f4) - the record is stale",
+    "e2e: the binary under test (src/out/Debug/chrome.dll) was built 2026-10-19T15:21:05.173000+00:00 but custom_browser/browser/nexus/boot_bundle/boot_bundle_store.h was modified 2026-10-19T19:32:43.572075+00:00 - the run exercised code older than what would ship. Rebuild, then re-run the suite"
   ]
 }
