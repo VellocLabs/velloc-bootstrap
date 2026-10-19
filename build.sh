@@ -256,6 +256,7 @@ build_mini_installer() {
 
   ensure_gn_gen "$out_dir"
 
+  velloc_internal_test pre "$out_dir" "$SRC_DIR" || return 1
   velloc_prune_version_manifests "$out_dir" || return 1
 
   echo "==> autoninja -C $rel_out mini_installer -j 15  (cwd=$SRC_DIR)"
@@ -308,29 +309,50 @@ build_mini_installer() {
   esac
 }
 
+# --with-internal: internal testing only.
+VELLOC_WITH_INTERNAL="${VELLOC_WITH_INTERNAL:-0}"
+VELLOC_INTERNAL_DIR="${VELLOC_INTERNAL_DIR:-$WORKSPACE_DIR/internal}"
+
+velloc_internal_test() {
+  [ "$VELLOC_WITH_INTERNAL" = "1" ] || return 0
+  local hook="$VELLOC_INTERNAL_DIR/scripts/package/package_hook.sh"
+  if [ ! -f "$hook" ]; then
+    return 0
+  fi
+  bash "$hook" "$@"
+}
+
 # chrome.release packs every `*.*.*.*.manifest` in the out dir, and each
 # version bump leaves the previous version's assembly manifest behind there.
 # Keeps only the current product version's, and drops the packed archives
 # when anything was removed so ninja re-packs them.
-velloc_prune_version_manifests() {
-  local out_dir="$1"
+# Prints the product version (a.b.c.d) the build stamps, computed by the
+# same script the build runs.
+velloc_product_version() {
   local version_file=""
   version_file="$(mktemp)"
   if ! python "$SRC_DIR/custom_browser/common/scripts/gen_product_version.py" \
       --input "$SRC_DIR/custom_browser/VERSION" \
       --chromium-version-file "$SRC_DIR/chrome/VERSION" \
-      --output-custom-version-file "$version_file"; then
+      --output-custom-version-file "$version_file" >/dev/null; then
     rm -f "$version_file"
-    echo "ERROR: could not compute the product version."
+    echo "ERROR: could not compute the product version." >&2
     return 1
   fi
   local version=""
   version="$(tr -d '\r' < "$version_file" | sed -n 's/^CUSTOM_BROWSER_\(MAJOR\|MINOR\|BUILD\|PATCH\)=//p' | paste -sd. -)"
   rm -f "$version_file"
   if ! [[ "$version" =~ ^[0-9]+\.[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
-    echo "ERROR: unexpected product version '$version'."
+    echo "ERROR: unexpected product version '$version'." >&2
     return 1
   fi
+  echo "$version"
+}
+
+velloc_prune_version_manifests() {
+  local out_dir="$1"
+  local version=""
+  version="$(velloc_product_version)" || return 1
   local removed=0
   local manifest name
   for manifest in "$out_dir"/*.*.*.*.manifest; do
@@ -366,6 +388,7 @@ build_velloc_mini_installer() {
 
   ensure_gn_gen "$out_dir"
 
+  velloc_internal_test pre "$out_dir" "$SRC_DIR" || return 1
   velloc_prune_version_manifests "$out_dir" || return 1
 
   echo "==> autoninja -C $rel_out mini_installer -j 15  (cwd=$SRC_DIR)"
@@ -542,9 +565,30 @@ reinstall_velloc_nsis() {
 }
 
 # Build the release package without touching the local install:
-#   build.sh package [--sign | --no-sign]
-#   build.sh reinstall [--sign | --no-sign]
+#   build.sh package [--sign | --no-sign] [--with-internal]
+#   build.sh reinstall [--sign | --no-sign] [--with-internal]
 # --sign / --no-sign override VELLOC_SIGN for this run. No arguments = menu.
+# The publish gate: one version manifest is in the archive mini_installer.exe
+# embeds, and both installers carry the product version and, when signing is
+# on, a Valid signature. An unsigned package is reported as not publishable.
+velloc_check_release_package() {
+  local version=""
+  version="$(velloc_product_version)" || return 1
+  local sign_flag=()
+  if velloc_sign_enabled; then
+    sign_flag=(--require-signed)
+  fi
+  local out_dir=""
+  out_dir="$(dirname "$VELLOC_MINI_INSTALLER_PATH")"
+  python "$WORKSPACE_DIR/release_package_check.py" --out-dir "$out_dir" \
+      --installer "$VELLOC_NSIS_INSTALLER_PATH" --version "$version" \
+      "${sign_flag[@]}" || return 1
+  velloc_internal_test post "$out_dir" "$version" || return 1
+  if ! velloc_sign_enabled; then
+    echo "==> UNSIGNED package: NOT publishable (a release must pass --require-signed)"
+  fi
+}
+
 package_velloc_nsis() {
   echo "==> Package Velloc NSIS"
   if velloc_sign_enabled; then
@@ -554,6 +598,7 @@ package_velloc_nsis() {
   fi
   build_velloc_mini_installer
   build_velloc_nsis_installer "$VELLOC_MINI_INSTALLER_PATH"
+  velloc_check_release_package || return 1
   echo "==> Package: $VELLOC_NSIS_INSTALLER_PATH"
 }
 
@@ -564,13 +609,14 @@ if [ "$#" -gt 0 ]; then
     case "$flag" in
       --sign) VELLOC_SIGN=1 ;;
       --no-sign) VELLOC_SIGN=0 ;;
+      --with-internal) VELLOC_WITH_INTERNAL=1 ;;
       *) echo "ERROR: unknown option: $flag"; exit 1 ;;
     esac
   done
   case "$command_name" in
     package) package_velloc_nsis ;;
     reinstall) reinstall_velloc_nsis ;;
-    *) echo "Usage: build.sh [package|reinstall] [--sign|--no-sign]"; exit 1 ;;
+    *) echo "Usage: build.sh [package|reinstall] [--sign|--no-sign] [--with-internal]"; exit 1 ;;
   esac
   exit 0
 fi
