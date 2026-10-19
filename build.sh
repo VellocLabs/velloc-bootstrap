@@ -256,6 +256,8 @@ build_mini_installer() {
 
   ensure_gn_gen "$out_dir"
 
+  velloc_prune_version_manifests "$out_dir" || return 1
+
   echo "==> autoninja -C $rel_out mini_installer -j 15  (cwd=$SRC_DIR)"
   ( cd "$SRC_DIR" && autoninja -C "$rel_out" mini_installer -j 15 )
 
@@ -306,6 +308,46 @@ build_mini_installer() {
   esac
 }
 
+# chrome.release packs every `*.*.*.*.manifest` in the out dir, and each
+# version bump leaves the previous version's assembly manifest behind there.
+# Keeps only the current product version's, and drops the packed archives
+# when anything was removed so ninja re-packs them.
+velloc_prune_version_manifests() {
+  local out_dir="$1"
+  local version_file=""
+  version_file="$(mktemp)"
+  if ! python "$SRC_DIR/custom_browser/common/scripts/gen_product_version.py" \
+      --input "$SRC_DIR/custom_browser/VERSION" \
+      --chromium-version-file "$SRC_DIR/chrome/VERSION" \
+      --output-custom-version-file "$version_file"; then
+    rm -f "$version_file"
+    echo "ERROR: could not compute the product version."
+    return 1
+  fi
+  local version=""
+  version="$(tr -d '\r' < "$version_file" | sed -n 's/^CUSTOM_BROWSER_\(MAJOR\|MINOR\|BUILD\|PATCH\)=//p' | paste -sd. -)"
+  rm -f "$version_file"
+  if ! [[ "$version" =~ ^[0-9]+\.[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
+    echo "ERROR: unexpected product version '$version'."
+    return 1
+  fi
+  local removed=0
+  local manifest name
+  for manifest in "$out_dir"/*.*.*.*.manifest; do
+    [ -f "$manifest" ] || continue
+    name="$(basename "$manifest")"
+    if [[ "$name" =~ ^[0-9]+\.[0-9]+\.[0-9]+\.[0-9]+\.manifest$ ]] &&
+        [ "$name" != "$version.manifest" ]; then
+      rm -f "$manifest"
+      removed=$((removed + 1))
+    fi
+  done
+  if [ "$removed" -gt 0 ]; then
+    echo "==> Removed $removed stale version manifest(s); keeping $version.manifest"
+    rm -f "$out_dir/chrome.7z" "$out_dir/chrome.packed.7z"
+  fi
+}
+
 build_velloc_mini_installer() {
   local idx=""
   if ! idx="$(find_arg_index_by_name "Velloc")"; then
@@ -323,6 +365,8 @@ build_velloc_mini_installer() {
   sync_args_gn "$ARGS_DIR/$file" "$out_dir/args.gn"
 
   ensure_gn_gen "$out_dir"
+
+  velloc_prune_version_manifests "$out_dir" || return 1
 
   echo "==> autoninja -C $rel_out mini_installer -j 15  (cwd=$SRC_DIR)"
   ( cd "$SRC_DIR" && autoninja -C "$rel_out" mini_installer -j 15 )
