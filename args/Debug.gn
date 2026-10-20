@@ -17,3 +17,6 @@ is_official_build = false
 is_chrome_branded = false
 branding_path_component = "Velloc"
 enable_custom_browser = true
+
+# custom_browser (Velloc): browser executable base name (velloc.exe).
+custom_browser_exe_name = "velloc"

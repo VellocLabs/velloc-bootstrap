@@ -9,3 +9,6 @@ enable_custom_browser = true
 # Non-component release builds default to PCH on Windows, so disable the
 # plugin to avoid the assert. Static-analysis-only; codegen is unaffected.
 clang_use_unsafe_buffers_plugin = false
+
+# custom_browser (Velloc): browser executable base name (velloc.exe).
+custom_browser_exe_name = "velloc"

@@ -44,3 +44,6 @@ is_chrome_branded = false
 # Windows-specific optimizations
 enable_iterator_debugging = false
 treat_warnings_as_errors = false
+
+# custom_browser (Velloc): browser executable base name (velloc.exe).
+custom_browser_exe_name = "velloc"

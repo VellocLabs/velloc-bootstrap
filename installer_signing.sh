@@ -142,10 +142,20 @@ velloc_sign_file() {
 # chrome.7z and that exists in the build output — one absolute path per line.
 # chrome.release is the installer's own manifest, so the signed set cannot
 # drift from the shipped set. Paths in it are relative to the out dir.
+# Prints the browser exe base name from the out dir's args.gn
+# (custom_browser_exe_name), or "chrome" when it is not set.
+velloc_exe_name() {
+  local name
+  name="$(sed -n 's/^[[:space:]]*custom_browser_exe_name[[:space:]]*=[[:space:]]*"\([^"]*\)".*/\1/p' \
+    "$1/args.gn" 2>/dev/null | tail -n 1)"
+  printf '%s\n' "${name:-chrome}"
+}
+
 velloc_sign_list_payload() {
   local release_file="$1"
   local out_dir="$2"
-  local line rel
+  local line rel exe_name
+  exe_name="$(velloc_exe_name "$out_dir")"
   while IFS= read -r line || [ -n "$line" ]; do
     line="${line%$'\r'}"
     case "$line" in
@@ -153,6 +163,8 @@ velloc_sign_list_payload() {
     esac
     rel="${line%%:*}"
     rel="${rel//'\'//}"
+    # The archive script stages chrome.release's chrome.exe under the exe name.
+    [ "$rel" = "chrome.exe" ] && rel="$exe_name.exe"
     case "$rel" in
       *.exe|*.EXE|*.dll|*.DLL) ;;
       *) continue ;;

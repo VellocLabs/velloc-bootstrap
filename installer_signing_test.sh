@@ -198,6 +198,20 @@ $PAYLOAD_OUT/WidevineCdm/_platform_specific/win_x64/widevinecdm.dll"
 }
 run_case case_list_payload && pass "payload list from chrome.release" || fail "payload list from chrome.release"
 
+# chrome.release's chrome.exe entry resolves to args.gn's custom_browser_exe_name.
+case_list_payload_exe_name() {
+  make_payload_fixture
+  mv "$PAYLOAD_OUT/chrome.exe" "$PAYLOAD_OUT/velloc.exe"
+  printf '%s\r\n' 'is_debug = false' 'custom_browser_exe_name = "velloc"' >"$PAYLOAD_OUT/args.gn"
+  [ "$(velloc_exe_name "$PAYLOAD_OUT")" = "velloc" ] || return 1
+  local got
+  got="$(velloc_sign_list_payload "$RELEASE" "$PAYLOAD_OUT" | head -n 1)"
+  [ "$got" = "$PAYLOAD_OUT/velloc.exe" ] || { echo "got: $got"; return 1; }
+  rm "$PAYLOAD_OUT/args.gn"
+  [ "$(velloc_exe_name "$PAYLOAD_OUT")" = "chrome" ] || return 1
+}
+run_case case_list_payload_exe_name && pass "payload exe follows custom_browser_exe_name" || fail "payload exe follows custom_browser_exe_name"
+
 # Signs every unsigned payload binary plus setup.exe; skips already-signed
 # ones (a vendor's, or ours from a previous run).
 case_sign_payload() {

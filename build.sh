@@ -394,7 +394,7 @@ build_velloc_mini_installer() {
   echo "==> autoninja -C $rel_out mini_installer -j 15  (cwd=$SRC_DIR)"
   ( cd "$SRC_DIR" && autoninja -C "$rel_out" mini_installer -j 15 )
 
-  # Sign what the installer ships (chrome.exe, chrome.dll, setup.exe, ...),
+  # Sign what the installer ships (the browser exe, chrome.dll, setup.exe, ...),
   # then re-pack it without ninja: siso treats the signed binaries as
   # modified outputs and relinks them, which would pack unsigned copies.
   if velloc_sign_enabled; then
@@ -470,6 +470,7 @@ build_velloc_nsis_installer() {
     cd "$nsis_dir"
     MSYS2_ARG_CONV_EXCL="*" makensis \
       "-DPRODUCT_NAME=$product_name" \
+      "-DBROWSER_EXE=$(velloc_exe_name "$(dirname "$mini_installer_path")").exe" \
       "-DMINI_INSTALLER_SOURCE=$mini_installer_win" \
       "-DMASTER_PREFERENCES_SOURCE=$master_prefs_win" \
       "${plugin_defines[@]}" \
