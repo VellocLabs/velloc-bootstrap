@@ -13,14 +13,12 @@ is_component_build = false        # REQUIRED for installer
 symbol_level = 0                  # smallest binary, fastest build
 
 target_cpu = "x64"
-enable_precompiled_headers = true
+# No PCH: libc++ clang modules (on by default with C++23) cannot be combined
+# with /Yc precompiled headers; precompile.cc fails with "missing 'export
+# module' declaration". sccache does not cache PCH builds either.
+enable_precompiled_headers = false
 
-# Chromium 149 added an assertion that the unsafe-buffers clang plugin is
-# incompatible with precompiled headers (build/config/clang/BUILD.gn:121).
-# Keep PCH for build speed on the official installer build and disable
-# the plugin. The plugin is a static-analysis layer; disabling it does
-# not affect generated code, only compile-time enforcement of unsafe
-# pointer patterns.
+# Static-analysis only; codegen is unaffected.
 clang_use_unsafe_buffers_plugin = false
 
 # Installer
