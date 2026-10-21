@@ -252,6 +252,11 @@ velloc_sign_repack() {
   local cmd python
   cmd="$(velloc_sign_archive_command "$out_dir")" || return 1
   python="${cmd%% *}"
+  # The archive command may name its interpreter relative to the out dir.
+  case "$python" in
+    /*|[A-Za-z]:*) ;;
+    */*) python="$(cd "$out_dir/$(dirname "$python")" && pwd)/$(basename "$python")" || return 1 ;;
+  esac
   echo "==> Repack signed payload: create_installer_archive.py"
   ( cd "$out_dir" && eval "$cmd" ) || {
     echo "ERROR: create_installer_archive.py failed."

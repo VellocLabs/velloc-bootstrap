@@ -301,6 +301,19 @@ case_repack() {
 }
 run_case case_repack && pass "repack runs archive then resource swap" || fail "repack runs archive then resource swap"
 
+# A relative interpreter in the archive command resolves against the out dir
+# for both steps, wherever the caller's cwd is.
+case_repack_relative_python() {
+  make_ninja_fixture
+  mkdir -p "$TMP/py/bin"
+  cp "$FAKE_PY" "$TMP/py/bin/fake_python.sh"
+  sed -i "s|command = $FAKE_PY |command = ../py/bin/fake_python.sh |" "$NINJA_OUT/toolchain.ninja"
+  velloc_sign_repack "$NINJA_OUT" >/dev/null || return 1
+  [ "$(wc -l <"$FAKE_PY_LOG")" -eq 2 ] || { cat "$FAKE_PY_LOG"; return 1; }
+  [[ "$(sed -n 2p "$FAKE_PY_LOG")" == *"installer_update_resources.py "* ]]
+}
+run_case case_repack_relative_python && pass "relative interpreter resolves against the out dir" || fail "relative interpreter resolves against the out dir"
+
 case_repack_fails() {
   make_ninja_fixture
   ! FAKE_PY_EXIT=1 velloc_sign_repack "$NINJA_OUT" >/dev/null
