@@ -1,6 +1,6 @@
 {
   "tag": "velloc-v1.155.2.0",
-  "created_utc": "2026-10-21T16:03:44Z",
+  "created_utc": "2026-10-22T00:09:13Z",
   "versions": {
     "custom_browser_major": 1,
     "chrome_major": 155,
@@ -12,7 +12,7 @@
       "name": "root",
       "path": ".",
       "tag": "velloc-v1.155.2.0",
-      "head": "64729b7304662b9cf9b8f979a909f21e28788132"
+      "head": "ae27b4017e254630c0450455a94e2cd7c160fa52"
     },
     {
       "name": "src",
@@ -30,11 +30,8 @@
       "name": "nexus_web",
       "path": "nexus_web",
       "tag": "velloc-v1.155.2.0",
-      "head": "35fdbd3fc5de40cabc5fb5e67bdbb12a19259a10"
+      "head": "40435f8b28ac772e41b4b50337caac4ff26dd4d9"
     }
   ],
-  "e2e_verified": false,
-  "e2e_waived": [
-    "e2e: the recorded run did not pass (outcome='failed', 32 failed)"
-  ]
+  "e2e_verified": true
 }
