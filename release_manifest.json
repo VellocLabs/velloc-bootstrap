@@ -1,6 +1,6 @@
 {
   "tag": "velloc-v1.155.2.0",
-  "created_utc": "2026-10-22T12:40:34Z",
+  "created_utc": "2026-10-23T13:43:38Z",
   "versions": {
     "custom_browser_major": 1,
     "chrome_major": 155,
@@ -12,7 +12,7 @@
       "name": "root",
       "path": ".",
       "tag": "velloc-v1.155.2.0",
-      "head": "4ad8d8a7480b499eb75ea57a1c8c835ba6744d1d"
+      "head": "6bf4fab2c2cbbb706767da9cc6aba7a987efa205"
     },
     {
       "name": "src",
@@ -24,14 +24,21 @@
       "name": "custom_browser",
       "path": "src\\custom_browser",
       "tag": "velloc-v1.155.2.0",
-      "head": "fb5fb685f65a1096f5c3d9752a9c2b7cc4d5571e"
+      "head": "c1c5b9570f8081b3747b7973330eab5844e009db"
     },
     {
       "name": "nexus_web",
       "path": "nexus_web",
       "tag": "velloc-v1.155.2.0",
-      "head": "6997679e15d840c98fc1f5d1022b7f69037f955a"
+      "head": "b814124ec11fde2c499abbbd6e139fac749ff586"
     }
   ],
-  "e2e_verified": true
+  "e2e_verified": false,
+  "e2e_waived": [
+    "e2e: the recorded run did not pass (outcome='failed', 10 failed)",
+    "e2e: the recorded run was not the full suite (14/117 spec files); first missing: 3 spec files",
+    "e2e: nexus_web: moved since the run (b1addec1 -> b814124e) - the record is stale",
+    "e2e: internal: moved since the run (63ffd7f3 -> f5925fc9) - the record is stale",
+    "e2e: the binary under test (src/out/Debug/chrome.dll) was built 2026-10-21T22:40:09.878000+00:00 but custom_browser/installer/wrapper_nsi_test.py was modified 2026-10-23T02:33:41.979321+00:00 - the run exercised code older than what would ship. Rebuild, then re-run the suite"
+  ]
 }
