@@ -145,6 +145,8 @@ ensure_gn_available
 
 # shellcheck source=installer_signing.sh
 . "$WORKSPACE_DIR/installer_signing.sh"
+# shellcheck source=release_assets.sh
+. "$WORKSPACE_DIR/release_assets.sh"
 velloc_sign_load_config
 
 ensure_makensis_available() {
@@ -487,7 +489,10 @@ build_velloc_nsis_installer() {
     velloc_sign_verify_nsis_output "$output_path" || return 1
   fi
 
-  VELLOC_NSIS_INSTALLER_PATH="$output_path"
+  local setup_dir=""
+  setup_dir="$(velloc_setup_dir "$WORKSPACE_DIR")"
+  velloc_place_release_assets "$output_path" "$setup_dir" || return 1
+  VELLOC_NSIS_INSTALLER_PATH="$setup_dir/$VELLOC_STABLE_ASSET_NAME"
 }
 
 resolve_mini_installer_path() {

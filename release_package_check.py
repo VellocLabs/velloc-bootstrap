@@ -1,7 +1,7 @@
 """Checks that a built installer is fit to publish.
 
   python release_package_check.py --out-dir src/out/Velloc \
-      --installer "src/custom_browser/installer/Velloc Code Setup.exe" \
+      --installer ../VellocSetup/VellocSetup.exe \
       --version 1.149.2.3 --require-signed
 
 Fails unless:
