@@ -1,6 +1,6 @@
 {
   "tag": "velloc-v1.155.2.3",
-  "created_utc": "2026-10-27T11:11:52Z",
+  "created_utc": "2026-10-27T15:27:30Z",
   "versions": {
     "custom_browser_major": 1,
     "chrome_major": 155,
@@ -12,7 +12,7 @@
       "name": "root",
       "path": ".",
       "tag": "velloc-v1.155.2.3",
-      "head": "6738349687b4e95f79dd6cbdee30053616eba1f3"
+      "head": "2fdaf1ef1102ba2e563580a850a61a06e0a05c28"
     },
     {
       "name": "src",
@@ -24,7 +24,7 @@
       "name": "custom_browser",
       "path": "src\\custom_browser",
       "tag": "velloc-v1.155.2.3",
-      "head": "9230406808eec520b930bb4bdf5ff1b47f468429"
+      "head": "e4d920501f163641ac5854523e69bd4ba38754f4"
     },
     {
       "name": "nexus_web",
@@ -35,10 +35,7 @@
   ],
   "e2e_verified": false,
   "e2e_waived": [
-    "e2e: the recorded run did not pass (outcome='failed', 6 failed)",
-    "e2e: the recorded run was not the full suite (1/122 spec files); first missing: 3 spec files",
-    "e2e: custom_browser: moved since the run (2fdfedd9 -> 505f0cdc) - the record is stale",
-    "e2e: internal: moved since the run (fa9d7f66 -> 5efddabe) - the record is stale",
-    "e2e: the binary under test (src/out/Debug/chrome.dll) was built 2026-10-27T06:15:48.800000+00:00 but custom_browser/browser/nexus/api/page_script/page_script_options.cc was modified 2026-10-27T11:01:43.515856+00:00 - the run exercised code older than what would ship. Rebuild, then re-run the suite"
+    "e2e: the recorded run was not the full suite (6/122 spec files); first missing: 3 spec files",
+    "e2e: internal: moved since the run (c1039ade -> 18cfcc40) - the record is stale"
   ]
 }
