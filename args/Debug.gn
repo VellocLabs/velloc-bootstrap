@@ -20,3 +20,8 @@ enable_custom_browser = true
 
 # custom_browser (Velloc): browser executable base name (velloc.exe).
 custom_browser_exe_name = "velloc"
+
+# Never apply testing/variations/fieldtrial_testing_config.json: it turns on
+# Chromium's experimental features (incl. Windows sandbox experiments) on every
+# launch of a non-Google-branded build. custom_browser static_asserts this.
+disable_fieldtrial_testing_config = true
