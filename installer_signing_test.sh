@@ -314,6 +314,55 @@ case_repack_relative_python() {
 }
 run_case case_repack_relative_python && pass "relative interpreter resolves against the out dir" || fail "relative interpreter resolves against the out dir"
 
+# Replaces the fixture's interpreter token with $1, written verbatim.
+set_archive_interpreter() {
+  local token="$1" line out=""
+  while IFS= read -r line; do
+    case "$line" in
+      "  command = $FAKE_PY "*) line="  command = $token ${line#"  command = $FAKE_PY "}" ;;
+    esac
+    out+="$line"$'\n'
+  done <"$NINJA_OUT/toolchain.ninja"
+  printf '%s' "$out" >"$NINJA_OUT/toolchain.ninja"
+}
+
+# Both steps ran with the archive arguments intact, the first in the out dir.
+repack_ran_both_steps() {
+  [ "$(wc -l <"$FAKE_PY_LOG")" -eq 2 ] || { cat "$FAKE_PY_LOG"; return 1; }
+  [[ "$(sed -n 1p "$FAKE_PY_LOG")" == "ninja_out: archive.py --build_dir . --staging_dir gen/mi --drive D:/x" ]] || { cat "$FAKE_PY_LOG"; return 1; }
+  [[ "$(sed -n 2p "$FAKE_PY_LOG")" == *"installer_update_resources.py "* ]]
+}
+
+case_repack_backslash_relative_python() {
+  make_ninja_fixture
+  mkdir -p "$TMP/py/bin"
+  cp "$FAKE_PY" "$TMP/py/bin/fake_python.sh"
+  set_archive_interpreter '..\py\bin\fake_python.sh'
+  velloc_sign_repack "$NINJA_OUT" >/dev/null || return 1
+  repack_ran_both_steps
+}
+run_case case_repack_backslash_relative_python && pass "backslash-relative interpreter resolves against the out dir" || fail "backslash-relative interpreter resolves against the out dir"
+
+case_repack_quoted_python_with_spaces() {
+  make_ninja_fixture
+  mkdir -p "$TMP/py dir/bin"
+  cp "$FAKE_PY" "$TMP/py dir/bin/fake_python.sh"
+  set_archive_interpreter '"../py dir/bin/fake_python.sh"'
+  velloc_sign_repack "$NINJA_OUT" >/dev/null || return 1
+  repack_ran_both_steps
+}
+run_case case_repack_quoted_python_with_spaces && pass "quoted interpreter with spaces resolves against the out dir" || fail "quoted interpreter with spaces resolves against the out dir"
+
+case_repack_quoted_absolute_python() {
+  make_ninja_fixture
+  mkdir -p "$TMP/py dir/bin"
+  cp "$FAKE_PY" "$TMP/py dir/bin/fake_python.sh"
+  set_archive_interpreter "\"$TMP/py dir/bin/fake_python.sh\""
+  velloc_sign_repack "$NINJA_OUT" >/dev/null || return 1
+  repack_ran_both_steps
+}
+run_case case_repack_quoted_absolute_python && pass "quoted absolute interpreter with spaces runs as given" || fail "quoted absolute interpreter with spaces runs as given"
+
 case_repack_fails() {
   make_ninja_fixture
   ! FAKE_PY_EXIT=1 velloc_sign_repack "$NINJA_OUT" >/dev/null

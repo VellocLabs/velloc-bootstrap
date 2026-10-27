@@ -249,16 +249,33 @@ velloc_sign_staging_dir() {
 # swaps the new archives into the already-linked mini_installer.exe.
 velloc_sign_repack() {
   local out_dir="$1"
-  local cmd python
+  local cmd python rest rel
   cmd="$(velloc_sign_archive_command "$out_dir")" || return 1
-  python="${cmd%% *}"
-  # The archive command may name its interpreter relative to the out dir.
+  # The interpreter is the first token, or a leading "double-quoted" one.
+  case "$cmd" in
+    \"*)
+      python="${cmd:1}"
+      python="${python%%\"*}"
+      rest="${cmd:$((${#python} + 2))}"
+      ;;
+    *)
+      python="${cmd%% *}"
+      rest="${cmd:${#python}}"
+      ;;
+  esac
+  # The archive command may name its interpreter relative to the out dir,
+  # with / or \ separators.
   case "$python" in
-    /*|[A-Za-z]:*) ;;
-    */*) python="$(cd "$out_dir/$(dirname "$python")" && pwd)/$(basename "$python")" || return 1 ;;
+    /*|[A-Za-z]:*|\\\\*) ;;
+    */*|*\\*)
+      rel="${python//\\//}"
+      python="$(cd "$out_dir/$(dirname "$rel")" && pwd)/$(basename "$rel")" || return 1
+      ;;
   esac
   echo "==> Repack signed payload: create_installer_archive.py"
-  ( cd "$out_dir" && eval "$cmd" ) || {
+  # The resolved interpreter runs the archive step too, so eval never
+  # re-reads its quotes or backslashes.
+  ( cd "$out_dir" && eval "\"\$python\"$rest" ) || {
     echo "ERROR: create_installer_archive.py failed."
     return 1
   }
