@@ -1,6 +1,6 @@
 {
   "tag": "velloc-v1.155.2.4",
-  "created_utc": "2026-10-28T00:37:27Z",
+  "created_utc": "2026-10-28T04:10:03Z",
   "versions": {
     "custom_browser_major": 1,
     "chrome_major": 155,
@@ -12,32 +12,34 @@
       "name": "root",
       "path": ".",
       "tag": "velloc-v1.155.2.4",
-      "head": "2ec5f28782705cdc7a66b80dfd466eb6b51c5a2f"
+      "head": "fa93946a236b012dcf2ebc6cfdc503feabc36741"
     },
     {
       "name": "src",
       "path": "src",
       "tag": "velloc-v1.155.2.4",
-      "head": "f8fd3734d0cee75f386f0685fd83dd03bbf35dc0"
+      "head": "137f47aed4daf8228c050e2d5e80278c74c1abee"
     },
     {
       "name": "custom_browser",
       "path": "src\\custom_browser",
       "tag": "velloc-v1.155.2.4",
-      "head": "45e7bd756783f3b3bcd88995ef264f249c53cc01"
+      "head": "ff0f0343c332e5c4a461fba1bf519aa6bd0313c7"
     },
     {
       "name": "nexus_web",
       "path": "nexus_web",
       "tag": "velloc-v1.155.2.4",
-      "head": "c64b71d06d2de649f42c918a0a57f8719c516916"
+      "head": "e4f48c451a8ace4f3d2448882616fe9c110935f1"
     }
   ],
   "e2e_verified": false,
   "e2e_waived": [
-    "e2e: the recorded run was not the full suite (4/122 spec files); first missing: 3 spec files",
-    "e2e: nexus_web: moved since the run (9cd12604 -> c64b71d0) - the record is stale",
-    "e2e: internal: had uncommitted tracked changes during the run, so what was tested is not what any commit contains",
-    "e2e: internal: moved since the run (18cfcc40 -> ce2b3cae) - the record is stale"
+    "e2e: the recorded run was not the full suite (1/122 spec files); first missing: 3 spec files",
+    "e2e: src: moved since the run (f8fd3734 -> 137f47ae) - the record is stale",
+    "e2e: custom_browser: moved since the run (45e7bd75 -> ff0f0343) - the record is stale",
+    "e2e: nexus_web: moved since the run (c64b71d0 -> e4f48c45) - the record is stale",
+    "e2e: internal: moved since the run (ce2b3cae -> 1826812a) - the record is stale",
+    "e2e: the binary under test (src/out/Debug/chrome.dll) was built 2026-10-27T14:08:11.813000+00:00 but custom_browser/resources/custom_browser_strings_ru.xtb was modified 2026-10-28T02:52:43.386727+00:00 - the run exercised code older than what would ship. Rebuild, then re-run the suite"
   ]
 }
