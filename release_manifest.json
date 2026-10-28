@@ -1,41 +1,43 @@
 {
-  "tag": "velloc-v1.155.2.3",
-  "created_utc": "2026-10-27T15:27:30Z",
+  "tag": "velloc-v1.155.2.4",
+  "created_utc": "2026-10-28T00:37:27Z",
   "versions": {
     "custom_browser_major": 1,
     "chrome_major": 155,
     "interface_version": 2,
-    "custom_browser_patch": 3
+    "custom_browser_patch": 4
   },
   "repos": [
     {
       "name": "root",
       "path": ".",
-      "tag": "velloc-v1.155.2.3",
-      "head": "2fdaf1ef1102ba2e563580a850a61a06e0a05c28"
+      "tag": "velloc-v1.155.2.4",
+      "head": "2ec5f28782705cdc7a66b80dfd466eb6b51c5a2f"
     },
     {
       "name": "src",
       "path": "src",
-      "tag": "velloc-v1.155.2.3",
+      "tag": "velloc-v1.155.2.4",
       "head": "f8fd3734d0cee75f386f0685fd83dd03bbf35dc0"
     },
     {
       "name": "custom_browser",
       "path": "src\\custom_browser",
-      "tag": "velloc-v1.155.2.3",
-      "head": "e4d920501f163641ac5854523e69bd4ba38754f4"
+      "tag": "velloc-v1.155.2.4",
+      "head": "45e7bd756783f3b3bcd88995ef264f249c53cc01"
     },
     {
       "name": "nexus_web",
       "path": "nexus_web",
-      "tag": "velloc-v1.155.2.3",
-      "head": "9cd126043648d94cb56491384bf2aacd06222ad7"
+      "tag": "velloc-v1.155.2.4",
+      "head": "c64b71d06d2de649f42c918a0a57f8719c516916"
     }
   ],
   "e2e_verified": false,
   "e2e_waived": [
-    "e2e: the recorded run was not the full suite (6/122 spec files); first missing: 3 spec files",
-    "e2e: internal: moved since the run (c1039ade -> 18cfcc40) - the record is stale"
+    "e2e: the recorded run was not the full suite (4/122 spec files); first missing: 3 spec files",
+    "e2e: nexus_web: moved since the run (9cd12604 -> c64b71d0) - the record is stale",
+    "e2e: internal: had uncommitted tracked changes during the run, so what was tested is not what any commit contains",
+    "e2e: internal: moved since the run (18cfcc40 -> ce2b3cae) - the record is stale"
   ]
 }
