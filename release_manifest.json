@@ -1,43 +1,44 @@
 {
-  "tag": "velloc-v1.155.2.6",
-  "created_utc": "2026-10-30T16:02:29Z",
+  "tag": "velloc-v1.155.2.7",
+  "created_utc": "2026-10-30T20:50:15Z",
   "versions": {
     "custom_browser_major": 1,
     "chrome_major": 155,
     "interface_version": 2,
-    "custom_browser_patch": 6
+    "custom_browser_patch": 7
   },
   "repos": [
     {
       "name": "root",
       "path": ".",
-      "tag": "velloc-v1.155.2.6",
-      "head": "dfca460c858579a4bc7f1afce3453d9aff03aa5d"
+      "tag": "velloc-v1.155.2.7",
+      "head": "feeb09116f16773077eb0ecc60cb659f59ad6c26"
     },
     {
       "name": "src",
       "path": "src",
-      "tag": "velloc-v1.155.2.6",
+      "tag": "velloc-v1.155.2.7",
       "head": "156c628dfde04eedd7a93a98c983286beceb2d80"
     },
     {
       "name": "custom_browser",
       "path": "src\\custom_browser",
-      "tag": "velloc-v1.155.2.6",
-      "head": "223bec6c6860024229ce24f183f7e8d5cdb6cd1c"
+      "tag": "velloc-v1.155.2.7",
+      "head": "4a92100bbcc3abda672a4b90356dbc4f8e1b46a1"
     },
     {
       "name": "nexus_web",
       "path": "nexus_web",
-      "tag": "velloc-v1.155.2.6",
-      "head": "68546cb19d73bd9abe8e66294560934f6cf9ca89"
+      "tag": "velloc-v1.155.2.7",
+      "head": "54c2729ff513b05a5c56c00dcfef8de2206a5f9a"
     }
   ],
   "e2e_verified": false,
   "e2e_waived": [
     "e2e: the recorded run was not the full suite (1/122 spec files); first missing: 3 spec files",
-    "e2e: nexus_web: moved since the run (db850004 -> 68546cb1) - the record is stale",
-    "e2e: internal: moved since the run (14d1a918 -> d8cd0327) - the record is stale",
-    "e2e: the binary under test (src/out/Debug/chrome.dll) was built 2026-10-30T13:58:13.617000+00:00 but custom_browser/installer/BUILD.gn was modified 2026-10-30T14:00:30.007548+00:00 - the run exercised code older than what would ship. Rebuild, then re-run the suite"
+    "e2e: custom_browser: moved since the run (1d9e82e8 -> c2c392a3) - the record is stale",
+    "e2e: nexus_web: moved since the run (62e908c5 -> 54c2729f) - the record is stale",
+    "e2e: internal: moved since the run (158abd28 -> 2b33ba26) - the record is stale",
+    "e2e: the binary under test (src/out/Debug/chrome.dll) was built 2026-10-30T13:58:13.617000+00:00 but custom_browser/browser/nexus/api/declarations/llm/rawStreamOpen.api.json was modified 2026-10-30T18:58:52.481740+00:00 - the run exercised code older than what would ship. Rebuild, then re-run the suite"
   ]
 }
