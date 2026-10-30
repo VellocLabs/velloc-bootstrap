@@ -1,7 +1,9 @@
 # Workspace tooling
 /depot_tools/
 /docs/
-/scripts/
+/scripts/*
+!/scripts/bootstrap_cli.py
+!/scripts/bootstrap_cli_test.py
 /internal/
 /_gclient_*/
 /_bad_scm/
