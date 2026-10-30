@@ -1,45 +1,43 @@
 {
-  "tag": "velloc-v1.155.2.5",
-  "created_utc": "2026-10-29T23:16:09Z",
+  "tag": "velloc-v1.155.2.6",
+  "created_utc": "2026-10-30T16:02:29Z",
   "versions": {
     "custom_browser_major": 1,
     "chrome_major": 155,
     "interface_version": 2,
-    "custom_browser_patch": 5
+    "custom_browser_patch": 6
   },
   "repos": [
     {
       "name": "root",
       "path": ".",
-      "tag": "velloc-v1.155.2.5",
-      "head": "ac9944b35dc10dca6fa6ba51a5cc048866da08a9"
+      "tag": "velloc-v1.155.2.6",
+      "head": "dfca460c858579a4bc7f1afce3453d9aff03aa5d"
     },
     {
       "name": "src",
       "path": "src",
-      "tag": "velloc-v1.155.2.5",
-      "head": "137f47aed4daf8228c050e2d5e80278c74c1abee"
+      "tag": "velloc-v1.155.2.6",
+      "head": "156c628dfde04eedd7a93a98c983286beceb2d80"
     },
     {
       "name": "custom_browser",
       "path": "src\\custom_browser",
-      "tag": "velloc-v1.155.2.5",
-      "head": "00180313c66e00c2346a4f65cd8af260b57ab130"
+      "tag": "velloc-v1.155.2.6",
+      "head": "223bec6c6860024229ce24f183f7e8d5cdb6cd1c"
     },
     {
       "name": "nexus_web",
       "path": "nexus_web",
-      "tag": "velloc-v1.155.2.5",
-      "head": "ea54ffdf310f3c79cf7e5074e8cf92c23e6c9bed"
+      "tag": "velloc-v1.155.2.6",
+      "head": "68546cb19d73bd9abe8e66294560934f6cf9ca89"
     }
   ],
   "e2e_verified": false,
   "e2e_waived": [
-    "e2e: the recorded run did not pass (outcome='failed', 0 failed)",
-    "e2e: the recorded run was not the full suite (0/122 spec files); first missing: 3 spec files",
-    "e2e: src: recorded run was on 'None', but a client release ships 'custom/main' - a green run off the shipping branch does not gate one",
-    "e2e: custom_browser: recorded run was on 'None', but a client release ships 'main' - a green run off the shipping branch does not gate one",
-    "e2e: nexus_web: recorded run was on 'None', but a client release ships 'main' - a green run off the shipping branch does not gate one",
-    "e2e: internal: recorded run was on 'None', but a client release ships 'main' - a green run off the shipping branch does not gate one"
+    "e2e: the recorded run was not the full suite (1/122 spec files); first missing: 3 spec files",
+    "e2e: nexus_web: moved since the run (db850004 -> 68546cb1) - the record is stale",
+    "e2e: internal: moved since the run (14d1a918 -> d8cd0327) - the record is stale",
+    "e2e: the binary under test (src/out/Debug/chrome.dll) was built 2026-10-30T13:58:13.617000+00:00 but custom_browser/installer/BUILD.gn was modified 2026-10-30T14:00:30.007548+00:00 - the run exercised code older than what would ship. Rebuild, then re-run the suite"
   ]
 }
