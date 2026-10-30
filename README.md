@@ -27,7 +27,7 @@ workspace for building the client. Pick the path that fits what you want to do:
 | [velloc-runtime](https://github.com/VellocLabs/velloc-runtime) | **The agent.** TypeScript / React: the turn loop, tools as the model sees them, permissions, sessions, memory, skills, plugins, MCP and the whole UI. |
 | [velloc-core](https://github.com/VellocLabs/velloc-core) | The client's own C++: the bridge, file / shell / browser capabilities, LLM transport, the installer. Lives at `src/custom_browser/` in a Chromium checkout. |
 | [velloc-chromium](https://github.com/VellocLabs/velloc-chromium) | The Chromium fork the client is built on (branch `custom/main`). Upstream code, kept close to Chromium. |
-| [plugins-marketplace](https://github.com/VellocLabs/plugins-marketplace) | The built-in marketplace: the plugins and mods every Velloc installs on its own, served from `plugins.velloc.app`. |
+| [plugins-marketplace](https://github.com/claude-code-mods/plugins-marketplace) | The built-in marketplace: the plugins and mods every Velloc installs on its own, served from `plugins.velloc.app`. |
 | [Nebius-Mod](https://github.com/VellocLabs/Nebius-Mod) | Nebius Token Factory models, cloud sandboxes, a SafeCode session type and web search, as one mod. |
 | [mod-template](https://github.com/VellocLabs/mod-template) | The starting point for a new mod shipped through the marketplace. |
 
@@ -90,7 +90,7 @@ model provider, MCP servers, session types, panes, status lines and commands.
 - Try it locally: link the folder as `~/.velloc/plugins/<name>` and restart
   Velloc.
 - Ship it through the
-  [built-in marketplace](https://github.com/VellocLabs/plugins-marketplace):
+  [built-in marketplace](https://github.com/claude-code-mods/plugins-marketplace):
   every Velloc picks a new version up within a day.
 - [Nebius-Mod](https://github.com/VellocLabs/Nebius-Mod) is a complete
   sample: a provider, an MCP server, a session type and UI panes — see
