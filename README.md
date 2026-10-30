@@ -205,4 +205,11 @@ User data (settings, sessions, memory, file snapshots) lives under `~/.velloc/`.
 
 ## License
 
-MIT — see [LICENSE](LICENSE). © 2026 VellocLabs.
+Apache License 2.0 — see [LICENSE](LICENSE). © 2026 VellocLabs.
+
+Velloc's own code is under the Apache License 2.0 in every repository:
+this one, `velloc-runtime` and `velloc-core`. Code taken from other projects
+keeps its own licence: the Chromium fork (`velloc-chromium`) and the Chromium
+files in `velloc-core` stay under Chromium's BSD-style licence, and the other
+third-party code and text is listed in the `velloc-core` README and in
+`velloc-runtime`'s `THIRD_PARTY_NOTICES.md`.
