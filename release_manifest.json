@@ -1,41 +1,44 @@
 {
-  "tag": "velloc-v1.155.2.8",
-  "created_utc": "2026-10-31T19:40:29Z",
+  "tag": "velloc-v1.155.2.9",
+  "created_utc": "2026-11-10T14:39:45Z",
   "versions": {
     "custom_browser_major": 1,
     "chrome_major": 155,
     "interface_version": 2,
-    "custom_browser_patch": 8
+    "custom_browser_patch": 9
   },
   "repos": [
     {
       "name": "root",
       "path": ".",
-      "tag": "velloc-v1.155.2.8",
-      "head": "268087dbba0dec969cd8d37bfee9f7e9b0294741"
+      "tag": "velloc-v1.155.2.9",
+      "head": "c39d4fb0a01ae1f0985000ff84f01538ee34289b"
     },
     {
       "name": "src",
       "path": "src",
-      "tag": "velloc-v1.155.2.8",
+      "tag": "velloc-v1.155.2.9",
       "head": "156c628dfde04eedd7a93a98c983286beceb2d80"
     },
     {
       "name": "custom_browser",
       "path": "src\\custom_browser",
-      "tag": "velloc-v1.155.2.8",
-      "head": "22c8ac46e1acdac2ddc84e4f051038bbad8c02e7"
+      "tag": "velloc-v1.155.2.9",
+      "head": "ff0e699dc5fe122c325708aba1c3ed0286b75f2e"
     },
     {
       "name": "nexus_web",
       "path": "nexus_web",
-      "tag": "velloc-v1.155.2.8",
-      "head": "d7a5aee89c4fbdc4648251802007a9156e471446"
+      "tag": "velloc-v1.155.2.9",
+      "head": "69dd0ca3a28d599b1c54b36f7c4e514c89f135e6"
     }
   ],
   "e2e_verified": false,
   "e2e_waived": [
-    "e2e: the recorded run was not the full suite (4/122 spec files); first missing: 3 spec files",
-    "e2e: nexus_web: moved since the run (1a9ea076 -> d7a5aee8) - the record is stale"
+    "e2e: the recorded run did not pass (outcome='failed', 3 failed)",
+    "e2e: the recorded run was not the full suite (2/132 spec files); first missing: 3 spec files",
+    "e2e: nexus_web: moved since the run (1633ebec -> 69dd0ca3) - the record is stale",
+    "e2e: internal: moved since the run (8310526f -> 7a6b9517) - the record is stale",
+    "e2e: the binary under test (src/out/Debug/chrome.dll) was built 2026-11-08T18:07:46.708000+00:00 but custom_browser/browser/nexus/tools/process_tool/process_tool.cc was modified 2026-11-08T19:10:50.534457+00:00 - the run exercised code older than what would ship. Rebuild, then re-run the suite"
   ]
 }
