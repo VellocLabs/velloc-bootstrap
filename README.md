@@ -1,6 +1,6 @@
 # Velloc
 
-**A coding agent that is also a browser, built for Windows.**
+**A coding agent for your Windows desktop.**
 
 Velloc reads and edits your project, runs Bash and PowerShell, and drives real
 browser tabs, all inside one desktop application. It works with the major
