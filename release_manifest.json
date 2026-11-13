@@ -1,44 +1,41 @@
 {
-  "tag": "velloc-v1.155.2.10",
-  "created_utc": "2026-11-12T13:02:17Z",
+  "tag": "velloc-v1.155.2.11",
+  "created_utc": "2026-11-13T08:15:02Z",
   "versions": {
     "custom_browser_major": 1,
     "chrome_major": 155,
     "interface_version": 2,
-    "custom_browser_patch": 10
+    "custom_browser_patch": 11
   },
   "repos": [
     {
       "name": "root",
       "path": ".",
-      "tag": "velloc-v1.155.2.10",
-      "head": "2e1fe8823395004eb8abb58bc084d3734cbe1f4a"
+      "tag": "velloc-v1.155.2.11",
+      "head": "3d5ace2742034648cc1d412a09d3a9123815ccab"
     },
     {
       "name": "src",
       "path": "src",
-      "tag": "velloc-v1.155.2.10",
-      "head": "156c628dfde04eedd7a93a98c983286beceb2d80"
+      "tag": "velloc-v1.155.2.11",
+      "head": "b618229681a6aa924d9c02a1ddd11914a1d2b1e5"
     },
     {
       "name": "custom_browser",
       "path": "src\\custom_browser",
-      "tag": "velloc-v1.155.2.10",
-      "head": "338624d3c75d59f7d86cb333abd96df04699a132"
+      "tag": "velloc-v1.155.2.11",
+      "head": "7bda3f21e923fabe3368e1ac4d1f43f7e807cc74"
     },
     {
       "name": "nexus_web",
       "path": "nexus_web",
-      "tag": "velloc-v1.155.2.10",
-      "head": "cc5f738d92c4e045a042c9c6aea9b57bdfc11fc1"
+      "tag": "velloc-v1.155.2.11",
+      "head": "97ae2f4905ce8123ef97b4970fb4a79c0a5a8161"
     }
   ],
   "e2e_verified": false,
   "e2e_waived": [
-    "e2e: the recorded run was not the full suite (6/137 spec files); first missing: 3 spec files",
-    "e2e: custom_browser: recorded run was on 'authoring-http-byte-stream-resume-reentry', but a client release ships 'main' - a green run off the shipping branch does not gate one",
-    "e2e: internal: had uncommitted tracked changes during the run, so what was tested is not what any commit contains",
-    "e2e: internal: moved since the run (9d2be7c9 -> 5620cfa3) - the record is stale",
-    "e2e: the binary under test (src/out/Debug/chrome.dll) was built 2026-11-12T12:47:56.435000+00:00 but custom_browser/browser/nexus/api/network/nexus_http_byte_stream.cc was modified 2026-11-12T12:56:12.449916+00:00 - the run exercised code older than what would ship. Rebuild, then re-run the suite"
+    "e2e: the recorded run was not the full suite (2/139 spec files); first missing: 3 spec files",
+    "e2e: internal: moved since the run (6ecc7678 -> f88173c3) - the record is stale"
   ]
 }
