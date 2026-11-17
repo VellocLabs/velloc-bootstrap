@@ -1,41 +1,42 @@
 {
-  "tag": "velloc-v1.155.2.15",
-  "created_utc": "2026-11-16T10:47:26Z",
+  "tag": "velloc-v1.155.2.16",
+  "created_utc": "2026-11-17T16:19:12Z",
   "versions": {
     "custom_browser_major": 1,
     "chrome_major": 155,
     "interface_version": 2,
-    "custom_browser_patch": 15
+    "custom_browser_patch": 16
   },
   "repos": [
     {
       "name": "root",
       "path": ".",
-      "tag": "velloc-v1.155.2.15",
-      "head": "8e24729119135414cefcff41b1c7d329f0362b44"
+      "tag": "velloc-v1.155.2.16",
+      "head": "cc8b035a1f37d45421ed8465708c54b4143927a3"
     },
     {
       "name": "src",
       "path": "src",
-      "tag": "velloc-v1.155.2.15",
+      "tag": "velloc-v1.155.2.16",
       "head": "ccda5dd533269372120655f3c59c321ea7914ebd"
     },
     {
       "name": "custom_browser",
       "path": "src\\custom_browser",
-      "tag": "velloc-v1.155.2.15",
-      "head": "87cfae3681fc00741125ee1a0b66b3eaefb23421"
+      "tag": "velloc-v1.155.2.16",
+      "head": "fa872fa2193bf1573e9e43df331843c9b3f718c2"
     },
     {
       "name": "nexus_web",
       "path": "nexus_web",
-      "tag": "velloc-v1.155.2.15",
-      "head": "5f140814b6168cc2cdff1eeed72967bbf8b59a49"
+      "tag": "velloc-v1.155.2.16",
+      "head": "960643419727187d8d5b548760f25698168fb6e0"
     }
   ],
   "e2e_verified": false,
   "e2e_waived": [
-    "e2e: the recorded run was not the full suite (28/141 spec files); first missing: 3 spec files",
-    "e2e: internal: moved since the run (0a936cc1 -> a8e060ee) - the record is stale"
+    "e2e: the recorded run was not the full suite (7/149 spec files); first missing: 3 spec files",
+    "e2e: internal: moved since the run (d314dfdb -> 2f7a46e5) - the record is stale",
+    "e2e: the binary under test (src/out/Debug/chrome.dll) was built 2026-11-17T10:06:34.167000+00:00 but custom_browser/browser/nexus/tools/browser_tool/browser_tool.cc was modified 2026-11-17T10:23:12.182906+00:00 - the run exercised code older than what would ship. Rebuild, then re-run the suite"
   ]
 }
