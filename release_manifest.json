@@ -1,42 +1,41 @@
 {
-  "tag": "velloc-v1.155.2.18",
-  "created_utc": "2026-11-18T14:35:16Z",
+  "tag": "velloc-v1.155.2.19",
+  "created_utc": "2026-11-19T11:11:00Z",
   "versions": {
     "custom_browser_major": 1,
     "chrome_major": 155,
     "interface_version": 2,
-    "custom_browser_patch": 18
+    "custom_browser_patch": 19
   },
   "repos": [
     {
       "name": "root",
       "path": ".",
-      "tag": "velloc-v1.155.2.18",
-      "head": "4d2d2801b4faf508f680b2141e67c32302639fe7"
+      "tag": "velloc-v1.155.2.19",
+      "head": "021dbecb2e7cccf0dbc0db56e0d95499d49db51d"
     },
     {
       "name": "src",
       "path": "src",
-      "tag": "velloc-v1.155.2.18",
+      "tag": "velloc-v1.155.2.19",
       "head": "360a31adf44e95a741e3f3e41a9c6483b9497ca1"
     },
     {
       "name": "custom_browser",
       "path": "src\\custom_browser",
-      "tag": "velloc-v1.155.2.18",
-      "head": "0500e56403f913be68650b6892da65fb71d143d8"
+      "tag": "velloc-v1.155.2.19",
+      "head": "bc77fe577e4cdfb006ab2c08af2d8fd9d2873096"
     },
     {
       "name": "nexus_web",
       "path": "nexus_web",
-      "tag": "velloc-v1.155.2.18",
-      "head": "9227fb575d2ef2c600650e86da84ce1da61cbffd"
+      "tag": "velloc-v1.155.2.19",
+      "head": "17d4e4f1ba4e3be5d4c03f7340d819bbb3c4c723"
     }
   ],
   "e2e_verified": false,
   "e2e_waived": [
     "e2e: the recorded run was not the full suite (6/149 spec files); first missing: 3 spec files",
-    "e2e: custom_browser: recorded run was on 'authoring-context-menu-mnemonics', but a client release ships 'main' - a green run off the shipping branch does not gate one",
-    "e2e: the binary under test (src/out/Debug/chrome.dll) was built 2026-11-18T14:11:35.451000+00:00 but custom_browser/browser/nexus/nexus_webview_context_menu.cc was modified 2026-11-18T14:30:00.413023+00:00 - the run exercised code older than what would ship. Rebuild, then re-run the suite"
+    "e2e: internal: moved since the run (6154c4a2 -> b4b68eb6) - the record is stale"
   ]
 }
