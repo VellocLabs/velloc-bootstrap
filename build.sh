@@ -137,6 +137,7 @@ default_choice=$((default_index + 1))
 last_choice=$default_choice
 last_arg_choice=$default_choice
 last_mini_action=4
+VELLOC_OUT_DIR=""
 VELLOC_MINI_INSTALLER_PATH=""
 VELLOC_SETUP_EXE=""
 VELLOC_NSIS_INSTALLER_PATH=""
@@ -258,6 +259,7 @@ build_mini_installer() {
 
   ensure_gn_gen "$out_dir"
 
+  velloc_sign_recover_outputs "$out_dir" || return 1
   velloc_internal_test pre "$out_dir" "$SRC_DIR" || return 1
   velloc_prune_version_manifests "$out_dir" || return 1
 
@@ -390,20 +392,12 @@ build_velloc_mini_installer() {
 
   ensure_gn_gen "$out_dir"
 
+  velloc_sign_recover_outputs "$out_dir" || return 1
   velloc_internal_test pre "$out_dir" "$SRC_DIR" || return 1
   velloc_prune_version_manifests "$out_dir" || return 1
 
   echo "==> autoninja -C $rel_out mini_installer -j 15  (cwd=$SRC_DIR)"
   ( cd "$SRC_DIR" && autoninja -C "$rel_out" mini_installer -j 15 )
-
-  # Sign what the installer ships (the browser exe, chrome.dll, setup.exe, ...),
-  # then re-pack it without ninja: siso treats the signed binaries as
-  # modified outputs and relinks them, which would pack unsigned copies.
-  if velloc_sign_enabled; then
-    velloc_sign_payload "$SRC_DIR/chrome/installer/mini_installer/chrome.release" "$out_dir" || return 1
-    velloc_sign_repack "$out_dir" || return 1
-    velloc_sign_verify_packed "$out_dir" || return 1
-  fi
 
   local mini_installer_path=""
   if ! mini_installer_path="$(resolve_mini_installer_path "$out_dir")"; then
@@ -418,13 +412,17 @@ build_velloc_mini_installer() {
     return 1
   fi
 
+  VELLOC_OUT_DIR="$out_dir"
   VELLOC_MINI_INSTALLER_PATH="$mini_installer_path"
   VELLOC_SETUP_EXE="$setup_exe"
 
-  # The NSIS wrapper embeds mini_installer.exe and runs it on the user's
-  # machine, so it is signed before makensis packs it.
+  # Signed: the installer ships a signed copy of what the out dir holds, and
+  # the out dir keeps its unsigned build outputs (velloc_sign_package).
   if velloc_sign_enabled; then
-    velloc_sign_file "$mini_installer_path"
+    velloc_sign_package "$SRC_DIR/chrome/installer/mini_installer/chrome.release" "$out_dir" || return 1
+    VELLOC_MINI_INSTALLER_PATH="$VELLOC_SIGNED_PACKAGE_DIR/mini_installer.exe"
+  else
+    rm -rf "$(velloc_sign_package_dir "$out_dir")"
   fi
 }
 
@@ -472,7 +470,7 @@ build_velloc_nsis_installer() {
     cd "$nsis_dir"
     MSYS2_ARG_CONV_EXCL="*" makensis \
       "-DPRODUCT_NAME=$product_name" \
-      "-DBROWSER_EXE=$(velloc_exe_name "$(dirname "$mini_installer_path")").exe" \
+      "-DBROWSER_EXE=$(velloc_exe_name "$VELLOC_OUT_DIR").exe" \
       "-DMINI_INSTALLER_SOURCE=$mini_installer_win" \
       "-DMASTER_PREFERENCES_SOURCE=$master_prefs_win" \
       "${plugin_defines[@]}" \
@@ -584,12 +582,12 @@ velloc_check_release_package() {
   if velloc_sign_enabled; then
     sign_flag=(--require-signed)
   fi
-  local out_dir=""
-  out_dir="$(dirname "$VELLOC_MINI_INSTALLER_PATH")"
-  python "$WORKSPACE_DIR/release_package_check.py" --out-dir "$out_dir" \
+  local package_dir=""
+  package_dir="$(dirname "$VELLOC_MINI_INSTALLER_PATH")"
+  python "$WORKSPACE_DIR/release_package_check.py" --out-dir "$package_dir" \
       --installer "$VELLOC_NSIS_INSTALLER_PATH" --version "$version" \
       "${sign_flag[@]}" || return 1
-  velloc_internal_test post "$out_dir" "$version" || return 1
+  velloc_internal_test post "$VELLOC_OUT_DIR" "$version" || return 1
   if ! velloc_sign_enabled; then
     echo "==> UNSIGNED package: NOT publishable (a release must pass --require-signed)"
   fi

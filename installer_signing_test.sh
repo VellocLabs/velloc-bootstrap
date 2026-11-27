@@ -402,13 +402,266 @@ case_verify_packed_unsigned() {
 run_case case_verify_packed_unsigned && pass "unsigned packed binary fails" || fail "unsigned packed binary fails"
 
 # build.sh must not re-run ninja to repack: siso relinks the signed binaries.
+# It signs after its one ninja run and installs from the signed package.
 case_build_wiring() {
-  local body
+  local body pkg
   body="$(sed -n '/^build_velloc_mini_installer() {/,/^}/p' "$HERE/build.sh")"
-  [[ "$body" == *"velloc_sign_repack"* && "$body" == *"velloc_sign_verify_packed"* ]] || return 1
-  [ "$(grep -c 'autoninja' <<<"$body")" -le 2 ]
+  pkg="$(sed -n '/^velloc_sign_build_package() {/,/^}/p' "$HERE/installer_signing.sh")"
+  [[ "$pkg" == *"velloc_sign_repack"* && "$pkg" == *"velloc_sign_verify_packed"* ]] || return 1
+  [[ "$body" == *'VELLOC_MINI_INSTALLER_PATH="$VELLOC_SIGNED_PACKAGE_DIR/mini_installer.exe"'* ]] || return 1
+  [ "$(grep -c 'autoninja' <<<"$body")" -le 2 ] || return 1
+  [ "$(grep -n 'velloc_sign_recover_outputs ' <<<"$body" | cut -d: -f1)" -lt \
+    "$(grep -n 'autoninja -C' <<<"$body" | head -n 1 | cut -d: -f1)" ] || return 1
+  [ "$(grep -n 'autoninja -C' <<<"$body" | tail -n 1 | cut -d: -f1)" -lt \
+    "$(grep -n 'velloc_sign_package ' <<<"$body" | cut -d: -f1)" ]
 }
 run_case case_build_wiring && pass "build.sh repacks without ninja" || fail "build.sh repacks without ninja"
+
+# 8b. The out dir keeps its build outputs: signing works on them in place,
+# then restores the unsigned files with their mtimes, so the next build has
+# nothing to relink.
+case_archive_outputs() {
+  local out="$TMP/archive_outputs"
+  rm -rf "$out"
+  mkdir -p "$out"
+  printf '%s\n' \
+    'build other.7z: __other_rule' \
+    '  depfile = gen/other.d' \
+    'build chrome.7z chrome.packed.7z setup.ex_ gen/mi/packed_files.rc: __chrome_installer_mini_installer_mini_installer_archive___build_toolchain_win_win_clang_x64__rule | archive.py chrome.dll' \
+    '  depfile = gen/mi/archive.d' \
+    '  pool = build_toolchain_action_pool' \
+    'build next.7z: __next_rule' \
+    '  depfile = gen/next.d' >"$out/toolchain.ninja"
+  local got
+  got="$(velloc_sign_archive_outputs "$out")" || return 1
+  [ "$got" = "chrome.7z
+chrome.packed.7z
+setup.ex_
+gen/mi/packed_files.rc
+gen/mi/archive.d" ] || { echo "got: $got"; return 1; }
+  rm "$out/toolchain.ninja"
+  ! velloc_sign_archive_outputs "$out" 2>/dev/null
+}
+run_case case_archive_outputs && pass "archive outputs and depfile read from ninja" || fail "archive outputs and depfile read from ninja"
+
+# Prints "<mtime ns> <sha256>" per named file.
+file_states() {
+  local dir="$1" rel
+  shift
+  for rel in "$@"; do
+    printf '%s %s %s\n' "$rel" "$(stat -c %.9Y "$dir/$rel")" "$(sha256sum <"$dir/$rel" | cut -d' ' -f1)"
+  done
+}
+
+case_keep_restore() {
+  local out="$TMP/keep_out" keep="$TMP/keep_dir"
+  rm -rf "$out" "$keep"
+  mkdir -p "$out/gen"
+  echo one >"$out/a.dll"
+  echo two >"$out/gen/b.rc"
+  touch -d '2026-01-02 03:04:05.1234567' "$out/a.dll" "$out/gen/b.rc"
+  local before
+  before="$(file_states "$out" a.dll gen/b.rc)"
+  velloc_sign_keep "$out" "$keep" a.dll gen/b.rc missing.dll || return 1
+  echo signed >>"$out/a.dll"
+  echo repacked >"$out/gen/b.rc"
+  velloc_sign_restore "$out" "$keep" || return 1
+  [ "$(file_states "$out" a.dll gen/b.rc)" = "$before" ] || return 1
+  [ ! -e "$keep" ] && [ ! -e "$out/missing.dll" ]
+}
+run_case case_keep_restore && pass "kept outputs restore with content and mtime" || fail "kept outputs restore with content and mtime"
+
+# Stub signing that writes a marker the stub's verify probe recognises.
+STUB_MARK_SIGN="$TMP/signtool_mark.sh"
+cat >"$STUB_MARK_SIGN" <<'EOF'
+#!/usr/bin/env bash
+echo "$*" >>"$STUB_LOG"
+target="$(cygpath -u "${!#}" 2>/dev/null || echo "${!#}")"
+case "$1" in
+  sign) printf 'STUB-SIGNED\n' >>"$target" ;;
+  verify) grep -q STUB-SIGNED "$target" 2>/dev/null || exit 1 ;;
+esac
+exit 0
+EOF
+chmod +x "$STUB_MARK_SIGN"
+
+case_sign_cached() {
+  configure
+  VELLOC_SIGNTOOL="$STUB_MARK_SIGN"
+  velloc_sign_check_config >/dev/null || return 1
+  local dir="$TMP/cached" cache="$TMP/cached/cache"
+  rm -rf "$dir"
+  mkdir -p "$dir"
+  echo body >"$dir/a.dll"
+  rm -f "$STUB_LOG"
+  velloc_sign_file_cached "$dir/a.dll" "$cache" a.dll >/dev/null || return 1
+  [ "$(grep -c '^sign ' "$STUB_LOG")" -eq 1 ] || return 1
+  local signed
+  signed="$(cat "$dir/a.dll")"
+  echo body >"$dir/a.dll"
+  velloc_sign_file_cached "$dir/a.dll" "$cache" a.dll >/dev/null || return 1
+  [ "$(grep -c '^sign ' "$STUB_LOG")" -eq 1 ] || { echo "unchanged file re-signed"; return 1; }
+  [ "$(cat "$dir/a.dll")" = "$signed" ] || return 1
+  echo changed >"$dir/a.dll"
+  velloc_sign_file_cached "$dir/a.dll" "$cache" a.dll >/dev/null || return 1
+  [ "$(grep -c '^sign ' "$STUB_LOG")" -eq 2 ] || { echo "changed file not re-signed"; return 1; }
+  echo changed >"$dir/a.dll"
+  VELLOC_SIGN_PROFILE=other-profile
+  velloc_sign_file_cached "$dir/a.dll" "$cache" a.dll >/dev/null || return 1
+  [ "$(grep -c '^sign ' "$STUB_LOG")" -eq 3 ] || { echo "new profile reused a signature"; return 1; }
+}
+run_case case_sign_cached && pass "signature cache: reuse unchanged, re-sign changed or new profile" \
+  || fail "signature cache: reuse unchanged, re-sign changed or new profile"
+
+# A built out dir: payload, setup.exe, mini_installer.exe and the archive
+# action's outputs, all with one fixed build mtime. The fake archive step
+# stages the payload as it is when it runs and rewrites every output; the
+# fake resource swap appends to mini_installer.exe.
+make_package_fixture() {
+  PKG_OUT="$TMP/pkg/Velloc"
+  rm -rf "$TMP/pkg" "$TMP/pkg_signing"
+  mkdir -p "$PKG_OUT/gen/mi"
+  FAKE_PKG_PY="$TMP/fake_pkg_python.sh"
+  cat >"$FAKE_PKG_PY" <<'EOF'
+#!/usr/bin/env bash
+echo "$*" >>"$FAKE_PKG_PY_LOG"
+case "$1" in
+  *installer_update_resources.py)
+    echo repacked >>"$(cygpath -u "$2" 2>/dev/null || echo "$2")" ;;
+  *)
+    mkdir -p gen/mi/temp_installer_archive
+    cp chrome.dll velloc.exe gen/mi/temp_installer_archive/
+    for f in chrome.7z chrome.packed.7z setup.ex_ gen/mi/packed_files.rc gen/mi/archive.d; do
+      echo "packed $(cat chrome.dll | tr '\n' ' ')" >"$f"
+    done ;;
+esac
+EOF
+  chmod +x "$FAKE_PKG_PY"
+  export FAKE_PKG_PY_LOG="$TMP/fake_pkg_py.log"
+  rm -f "$FAKE_PKG_PY_LOG"
+  printf '%s\n' \
+    'rule __chrome_installer_mini_installer_mini_installer_archive___build_toolchain_win_win_clang_x64__rule' \
+    "  command = $FAKE_PKG_PY archive.py --build_dir . --staging_dir gen/mi" \
+    'build chrome.7z chrome.packed.7z setup.ex_ gen/mi/packed_files.rc: __chrome_installer_mini_installer_mini_installer_archive___build_toolchain_win_win_clang_x64__rule | archive.py' \
+    '  depfile = gen/mi/archive.d' >"$PKG_OUT/toolchain.ninja"
+  printf '%s\r\n' 'chrome.exe: %(ChromeDir)s\' 'chrome.dll: %(VersionDir)s\' \
+    'resources.pak: %(VersionDir)s\' >"$TMP/pkg/chrome.release"
+  printf '%s\n' 'custom_browser_exe_name = "velloc"' >"$PKG_OUT/args.gn"
+  local f
+  for f in velloc.exe chrome.dll resources.pak setup.exe mini_installer.exe \
+      chrome.7z chrome.packed.7z setup.ex_ gen/mi/packed_files.rc gen/mi/archive.d; do
+    echo "built $f" >"$PKG_OUT/$f"
+  done
+  find "$PKG_OUT" -type f -exec touch -d '2026-01-02 03:04:05.1234567' {} +
+  PKG_FILES=(velloc.exe chrome.dll resources.pak setup.exe mini_installer.exe
+    chrome.7z chrome.packed.7z setup.ex_ gen/mi/packed_files.rc gen/mi/archive.d)
+  configure
+  VELLOC_SIGNTOOL="$STUB_MARK_SIGN"
+  VELLOC_SIGN_WORK_DIR="$TMP/pkg_signing"
+  velloc_sign_check_config >/dev/null
+}
+
+case_sign_package() {
+  make_package_fixture || return 1
+  local before out pkg
+  before="$(file_states "$PKG_OUT" "${PKG_FILES[@]}")"
+  rm -f "$STUB_LOG"
+  out="$(velloc_sign_package "$TMP/pkg/chrome.release" "$PKG_OUT")" || { echo "$out"; return 1; }
+  pkg="$(velloc_sign_package_dir "$PKG_OUT")"
+  [ "$(file_states "$PKG_OUT" "${PKG_FILES[@]}")" = "$before" ] || { echo "out dir changed"; return 1; }
+  [ ! -e "$(dirname "$pkg")/keep" ] || return 1
+  grep -q STUB-SIGNED "$pkg/mini_installer.exe" && grep -q repacked "$pkg/mini_installer.exe" || return 1
+  grep -q STUB-SIGNED "$pkg/setup.exe" || return 1
+  # The packed archive was built from the signed chrome.dll.
+  grep -q STUB-SIGNED "$pkg/chrome.packed.7z" || return 1
+  [ "$(grep -c '^sign ' "$STUB_LOG")" -eq 4 ] || { cat "$STUB_LOG"; return 1; }
+}
+run_case case_sign_package && pass "signed package built, out dir left as the build wrote it" \
+  || fail "signed package built, out dir left as the build wrote it"
+
+case_sign_package_up_to_date() {
+  make_package_fixture || return 1
+  velloc_sign_package "$TMP/pkg/chrome.release" "$PKG_OUT" >/dev/null || return 1
+  rm -f "$STUB_LOG" "$FAKE_PKG_PY_LOG"
+  local out
+  out="$(velloc_sign_package "$TMP/pkg/chrome.release" "$PKG_OUT")" || { echo "$out"; return 1; }
+  [[ "$out" == *"Signed package up to date"* ]] || { echo "$out"; return 1; }
+  ! grep -q '^sign ' "$STUB_LOG" && [ ! -e "$FAKE_PKG_PY_LOG" ]
+}
+run_case case_sign_package_up_to_date && pass "unchanged build reuses the signed package" \
+  || fail "unchanged build reuses the signed package"
+
+# A rebuilt mini_installer.exe re-packs; binaries the build did not change
+# keep their earlier signatures.
+case_sign_package_rebuilt() {
+  make_package_fixture || return 1
+  velloc_sign_package "$TMP/pkg/chrome.release" "$PKG_OUT" >/dev/null || return 1
+  echo "relinked" >"$PKG_OUT/mini_installer.exe"
+  echo "relinked" >"$PKG_OUT/chrome.dll"
+  rm -f "$STUB_LOG"
+  local out
+  out="$(velloc_sign_package "$TMP/pkg/chrome.release" "$PKG_OUT")" || { echo "$out"; return 1; }
+  grep -q '^sign .*chrome.dll$' "$STUB_LOG" && grep -q '^sign .*mini_installer.exe$' "$STUB_LOG" || { cat "$STUB_LOG"; return 1; }
+  ! grep -q '^sign .*velloc.exe$' "$STUB_LOG" && ! grep -q '^sign .*setup.exe$' "$STUB_LOG" || { cat "$STUB_LOG"; return 1; }
+  grep -q relinked "$(velloc_sign_package_dir "$PKG_OUT")/chrome.packed.7z"
+}
+run_case case_sign_package_rebuilt && pass "rebuild re-signs only what changed" \
+  || fail "rebuild re-signs only what changed"
+
+# A failed signing step still restores the out dir and leaves no package.
+case_sign_package_fails() {
+  make_package_fixture || return 1
+  local before
+  before="$(file_states "$PKG_OUT" "${PKG_FILES[@]}")"
+  sed -i 's/^  \*)$/  *) exit 3 ;;\n  never)/' "$FAKE_PKG_PY"
+  ! velloc_sign_package "$TMP/pkg/chrome.release" "$PKG_OUT" >/dev/null 2>&1 || return 1
+  [ "$(file_states "$PKG_OUT" "${PKG_FILES[@]}")" = "$before" ] || { echo "out dir changed"; return 1; }
+  [ ! -e "$(velloc_sign_package_dir "$PKG_OUT")" ]
+}
+run_case case_sign_package_fails && pass "failed repack restores the out dir, no package" \
+  || fail "failed repack restores the out dir, no package"
+
+# A run stopped between keep and restore leaves the keep dir; the next run
+# puts the unsigned outputs back before building and does not discard them.
+case_sign_package_interrupted() {
+  make_package_fixture || return 1
+  local before keep
+  before="$(file_states "$PKG_OUT" "${PKG_FILES[@]}")"
+  keep="$(velloc_sign_keep_dir "$PKG_OUT")"
+  velloc_sign_keep "$PKG_OUT" "$keep" "${PKG_FILES[@]}" || return 1
+  echo STUB-SIGNED >>"$PKG_OUT/chrome.dll"
+  mv "$keep/setup.exe" "$PKG_OUT/setup.exe"
+  velloc_sign_keep "$PKG_OUT" "$keep" "${PKG_FILES[@]}" || return 1
+  velloc_sign_recover_outputs "$PKG_OUT" >/dev/null || return 1
+  [ "$(file_states "$PKG_OUT" "${PKG_FILES[@]}")" = "$before" ] || { echo "keep not restored"; return 1; }
+  [ ! -e "$keep" ] || return 1
+  velloc_sign_recover_outputs "$PKG_OUT" >/dev/null
+}
+run_case case_sign_package_interrupted && pass "interrupted run's kept outputs are restored, not discarded" \
+  || fail "interrupted run's kept outputs are restored, not discarded"
+
+# An update stopped after the signed copy is written never pairs that copy
+# with the previous content's key.
+case_sign_cached_interrupted() {
+  configure
+  VELLOC_SIGNTOOL="$STUB_MARK_SIGN"
+  velloc_sign_check_config >/dev/null || return 1
+  local dir="$TMP/cached_int" cache="$TMP/cached_int/cache"
+  rm -rf "$dir"
+  mkdir -p "$dir"
+  echo old >"$dir/a.dll"
+  velloc_sign_file_cached "$dir/a.dll" "$cache" a.dll >/dev/null || return 1
+  echo new >"$dir/a.dll"
+  cp() { command cp "$@"; [[ "${!#}" != *.signed ]]; }
+  ! velloc_sign_file_cached "$dir/a.dll" "$cache" a.dll >/dev/null 2>&1 || return 1
+  unset -f cp
+  echo old >"$dir/a.dll"
+  rm -f "$STUB_LOG"
+  velloc_sign_file_cached "$dir/a.dll" "$cache" a.dll >/dev/null || return 1
+  grep -q '^sign ' "$STUB_LOG" && ! grep -q new "$dir/a.dll"
+}
+run_case case_sign_cached_interrupted && pass "interrupted cache update never reuses a mismatched signature" \
+  || fail "interrupted cache update never reuses a mismatched signature"
 
 # 9. The resource swap itself, against a real PE file.
 python "$HERE/installer_update_resources_test.py" >/dev/null 2>&1 \

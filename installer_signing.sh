@@ -183,13 +183,36 @@ velloc_sign_is_signed() {
   MSYS2_ARG_CONV_EXCL="*" "$VELLOC_SIGNTOOL" verify /pa /q "$file_win" >/dev/null 2>&1
 }
 
+# Signs one file through a cache of signed copies in cache_dir, keyed by name
+# and by the unsigned file's sha256 plus the signing profile: an unchanged
+# binary gets its earlier signed copy instead of a new signing request. One
+# entry per name, replaced when the unsigned content changes.
+velloc_sign_file_cached() {
+  local file="$1" cache_dir="$2" name="$3"
+  local key entry
+  key="$(sha256sum "$file" | cut -d' ' -f1) $VELLOC_SIGN_ACCOUNT/$VELLOC_SIGN_PROFILE" || return 1
+  entry="$cache_dir/$name"
+  if [ -f "$entry.signed" ] && [ "$(cat "$entry.key" 2>/dev/null)" = "$key" ]; then
+    cp -f "$entry.signed" "$file" || return 1
+    echo "==> signature reused: $file"
+    return 0
+  fi
+  velloc_sign_file "$file" || return 1
+  mkdir -p "$cache_dir" || return 1
+  # The key goes first and comes back last: an interrupted update leaves an
+  # entry that matches nothing, never a signed copy under another file's key.
+  rm -f "$entry.key" || return 1
+  cp -f "$file" "$entry.signed" && printf '%s\n' "$key" >"$entry.key"
+}
+
 # Signs every unsigned payload binary plus setup.exe (packed separately as
-# setup.ex_). Run after building mini_installer, then velloc_sign_repack —
-# never a second ninja run: siso sees the signed binaries as modified outputs
-# and relinks them, stripping the signatures before they are packed.
+# setup.ex_), in place in the out dir. With a cache dir, unchanged binaries
+# reuse their earlier signed copies (velloc_sign_file_cached). Called by
+# velloc_sign_package, which restores the unsigned outputs afterwards.
 velloc_sign_payload() {
   local release_file="$1"
   local out_dir="$2"
+  local cache_dir="${3:-}"
   local files=()
   local file
   while IFS= read -r file; do
@@ -208,7 +231,12 @@ velloc_sign_payload() {
       skipped=$((skipped + 1))
       continue
     fi
-    velloc_sign_file "$file" || return 1
+    if [ -n "$cache_dir" ]; then
+      local rel="${file#"$out_dir"/}"
+      velloc_sign_file_cached "$file" "$cache_dir" "${rel//\//__}" || return 1
+    else
+      velloc_sign_file "$file" || return 1
+    fi
     signed=$((signed + 1))
   done
   echo "==> Payload: signed $signed, already signed $skipped"
@@ -313,6 +341,143 @@ velloc_sign_verify_packed() {
     return 1
   fi
   echo "==> Packed payload: $count binaries, all signed"
+}
+
+# Prints the files the mini_installer_archive action writes, relative to the
+# out dir: its build statement's outputs and its depfile.
+velloc_sign_archive_outputs() {
+  local out_dir="$1"
+  local rule="__chrome_installer_mini_installer_mini_installer_archive___"
+  local stmt line outs out
+  stmt="$(grep -h -A4 "^build [^:]*: $rule" "$out_dir"/*.ninja 2>/dev/null)"
+  line="$(printf '%s\n' "$stmt" | head -n 1)"
+  if [ -z "$line" ]; then
+    echo "ERROR: mini_installer_archive build statement not found in $out_dir/*.ninja." >&2
+    return 1
+  fi
+  outs="${line#build }"
+  outs="${outs%%: $rule*}"
+  for out in $outs; do
+    [ "$out" = "|" ] || printf '%s\n' "$out"
+  done
+  printf '%s\n' "$stmt" | sed -n '2,$p' | sed -n '/^build /q; s/^  depfile = //p'
+}
+
+# Copies each named out-dir file (relative paths) into keep_dir with its
+# mtime, and records the list for velloc_sign_restore. A keep_dir left by an
+# interrupted run is restored first, never discarded.
+velloc_sign_keep() {
+  local out_dir="$1" keep_dir="$2"
+  shift 2
+  local rel
+  velloc_sign_restore "$out_dir" "$keep_dir" || return 1
+  rm -rf "$keep_dir"
+  mkdir -p "$keep_dir" || return 1
+  : >"$keep_dir/.files"
+  for rel in "$@"; do
+    [ -f "$out_dir/$rel" ] || continue
+    mkdir -p "$keep_dir/$(dirname "$rel")" || return 1
+    cp -p "$out_dir/$rel" "$keep_dir/$rel" || return 1
+    printf '%s\n' "$rel" >>"$keep_dir/.files"
+  done
+}
+
+# Moves every kept file back over its out-dir path, mtime unchanged, so the
+# out dir again matches what the build recorded, then drops keep_dir.
+velloc_sign_restore() {
+  local out_dir="$1" keep_dir="$2"
+  local rel bad=0
+  [ -f "$keep_dir/.files" ] || return 0
+  while IFS= read -r rel; do
+    [ -e "$keep_dir/$rel" ] || continue
+    mv -f "$keep_dir/$rel" "$out_dir/$rel" || bad=1
+  done <"$keep_dir/.files"
+  if [ "$bad" -ne 0 ]; then
+    echo "ERROR: could not restore the unsigned build outputs from $keep_dir."
+    return 1
+  fi
+  rm -rf "$keep_dir"
+}
+
+# The signed package for an out dir: mini_installer.exe, the
+# chrome.packed.7z it embeds, and setup.exe, all signed.
+velloc_sign_package_dir() {
+  echo "${VELLOC_SIGN_WORK_DIR:-$OUT_BASE/signing}/$(basename "$1")/package"
+}
+
+# Where velloc_sign_package keeps an out dir's unsigned outputs while it signs.
+velloc_sign_keep_dir() {
+  echo "$(dirname "$(velloc_sign_package_dir "$1")")/keep"
+}
+
+# Puts back the unsigned outputs an interrupted signing run left in the keep
+# dir. Run before building the out dir, so the build sees its own outputs.
+velloc_sign_recover_outputs() {
+  local out_dir="$1" keep
+  keep="$(velloc_sign_keep_dir "$out_dir")"
+  [ -f "$keep/.files" ] || return 0
+  echo "==> Restoring unsigned build outputs left by an interrupted signing run"
+  velloc_sign_restore "$out_dir" "$keep"
+}
+
+# Produces the signed package for a built out dir and leaves the out dir's
+# files exactly as the build wrote them (content and mtime), so the next
+# build relinks nothing it did not change. Reuses the existing package while
+# the unsigned mini_installer.exe and signing profile are unchanged.
+# Sets VELLOC_SIGNED_PACKAGE_DIR.
+velloc_sign_package() {
+  local release_file="$1" out_dir="$2"
+  local package work keep cache source key
+  package="$(velloc_sign_package_dir "$out_dir")"
+  work="$(dirname "$package")"
+  keep="$(velloc_sign_keep_dir "$out_dir")"
+  cache="$work/cache"
+  source="$out_dir/mini_installer.exe"
+  VELLOC_SIGNED_PACKAGE_DIR="$package"
+  if [ ! -f "$source" ]; then
+    echo "ERROR: mini_installer.exe not found in $out_dir."
+    return 1
+  fi
+  key="$(sha256sum "$source" | cut -d' ' -f1) $VELLOC_SIGN_ACCOUNT/$VELLOC_SIGN_PROFILE" || return 1
+  if [ "$(cat "$package/source.key" 2>/dev/null)" = "$key" ] &&
+      [ -f "$package/chrome.packed.7z" ] && [ -f "$package/setup.exe" ] &&
+      velloc_sign_is_signed "$package/mini_installer.exe"; then
+    echo "==> Signed package up to date: $package"
+    return 0
+  fi
+
+  local files=() file archive
+  while IFS= read -r file; do
+    files+=("${file#"$out_dir"/}")
+  done < <(velloc_sign_list_payload "$release_file" "$out_dir")
+  archive="$(velloc_sign_archive_outputs "$out_dir")" || return 1
+  while IFS= read -r file; do
+    files+=("$file")
+  done <<<"$archive"
+  files+=(setup.exe mini_installer.exe)
+
+  rm -rf "$package"
+  velloc_sign_keep "$out_dir" "$keep" "${files[@]}" || return 1
+  local status=0
+  velloc_sign_build_package "$release_file" "$out_dir" "$cache" "$package" || status=1
+  velloc_sign_restore "$out_dir" "$keep" || status=1
+  if [ "$status" -ne 0 ]; then
+    rm -rf "$package"
+    return 1
+  fi
+  printf '%s\n' "$key" >"$package/source.key"
+  echo "==> Signed package: $package (build outputs restored unsigned)"
+}
+
+# Signs and re-packs in place, then copies the signed package out.
+velloc_sign_build_package() {
+  local release_file="$1" out_dir="$2" cache="$3" package="$4"
+  velloc_sign_payload "$release_file" "$out_dir" "$cache" || return 1
+  velloc_sign_repack "$out_dir" || return 1
+  velloc_sign_verify_packed "$out_dir" || return 1
+  velloc_sign_file_cached "$out_dir/mini_installer.exe" "$cache" mini_installer.exe || return 1
+  mkdir -p "$package" || return 1
+  cp -f "$out_dir/mini_installer.exe" "$out_dir/chrome.packed.7z" "$out_dir/setup.exe" "$package/"
 }
 
 # The NSIS wrapper unpacks its own plug-in DLLs (nsDialogs.dll for the MUI
